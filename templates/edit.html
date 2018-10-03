@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+   <h1>{{ person.name }}</h1>
+    <form action="{% url 'edit_blog' person.id %}" method="post">
+        {% csrf_token %}
+        New name: <input type="text" name="name" value="{{ person.name }}">
+        <input type="submit" value="Save">
+    </form>
+{% endblock %}
