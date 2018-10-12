@@ -1,0 +1,14 @@
+{% if auctionList %}
+    <ul>
+    {% for auction in auctionList %}
+        <li>
+{#        <a href="{% url 'auctions:detail' auction.id %}">#}
+{#            {{ auction.title }}#}
+{#        </a>#}
+        <p>{{ auction.title }}</p>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No auctions are available.</p>
+{% endif %}
