@@ -17,7 +17,6 @@ class Auction(models.Model):
         (2, 'Due'),
         (3, 'Adjudicated'),
     )
-
     state = models.CharField(max_length=10, choices=states, default='Active')
 
     def __str__(self):

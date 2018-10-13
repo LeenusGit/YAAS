@@ -1,6 +1,6 @@
 import datetime
 
-from django.contrib.auth.models import User, PermissionsMixin
+from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.test import TestCase
 from django.urls import reverse
@@ -53,12 +53,12 @@ class AuctionIndexViewTests(TestCase):
 
 class CreateAuctionFormTests(TestCase):
 
-    def testCreateValidAuction(self):
+    def testCreateValidFormattedAuction(self):
         formData = {'title': 'Ford Focus',
                     'description': 'A car of brand Ford and model Focus',
-                    'minPrice': 10.5,
-                    'closeDate': '2018-10-16',
-                    'closeTime': '19:23:59',
+                    'minPrice': 12.3,
+                    'closeDate': '12.03.4567',
+                    'closeTime': '12:34',
                     }
         form = AuctionForm(data=formData)
         self.assertEqual(form.is_valid(), True)
@@ -83,5 +83,4 @@ class UserModelTests(TestCase):
         username = 'JLennon'
         password = 'johnpassword'
         user2 = authenticate(username=username, password=password)
-
         self.assertEquals(user, user2)
