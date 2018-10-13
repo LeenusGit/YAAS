@@ -14,6 +14,9 @@ class AuctionIndexView(generic.ListView):
         return Auction.objects.all()
 
 
+def successfulAuctionPost(request):
+    return render(request, 'auctions/success.html')
+
 def getNewAuction(request):
 
     if request.method == 'POST':

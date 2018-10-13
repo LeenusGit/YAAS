@@ -1,14 +1,21 @@
-{% if auctionList %}
-    <ul>
-    {% for auction in auctionList %}
-        <li>
-{#        <a href="{% url 'auctions:detail' auction.id %}">#}
-{#            {{ auction.title }}#}
-{#        </a>#}
-        <p>{{ auction.title }}</p>
-        </li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No auctions are available.</p>
-{% endif %}
+{% extends 'base.html' %}
+
+{% block title %}Auction List{% endblock %}
+
+{% block content %}
+    <a href="{% url 'auctions:create' %}">Create New Auction</a>
+    {% if auctionList %}
+        <ul>
+            {% for auction in auctionList %}
+                <li>
+                    {#        <a href="{% url 'auctions:detail' auction.id %}">#}
+                    {#            {{ auction.title }}#}
+                    {#        </a>#}
+                    <p>{{ auction.title }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No auctions are available.</p>
+    {% endif %}
+{% endblock %}

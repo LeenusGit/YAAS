@@ -1,10 +1,12 @@
 import datetime
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, PermissionsMixin
 from django.contrib.auth import authenticate
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+
+from .forms import AuctionForm
 
 from .models import Auction
 
@@ -41,13 +43,25 @@ class AuctionIndexViewTests(TestCase):
         response = self.client.get(reverse('auctions:index'))
         self.assertEqual(response.status_code, 200)
         self.assertQuerysetEqual(response.context['auctionList'], [])
-       # self.assertContains(response, "No auctions are available.")
 
     def testOneAuction(self):
         auction = createDefinedAuction()
         context = '<Auction: %s>' % auction.title
         response = self.client.get(reverse('auctions:index'))
         self.assertQuerysetEqual(response.context['auctionList'], [context])
+
+
+class CreateAuctionFormTests(TestCase):
+
+    def testCreateValidAuction(self):
+        formData = {'title': 'Ford Focus',
+                    'description': 'A car of brand Ford and model Focus',
+                    'minPrice': 10.5,
+                    'closeDate': '2018-10-16',
+                    'closeTime': '19:23:59',
+                    }
+        form = AuctionForm(data=formData)
+        self.assertEqual(form.is_valid(), True)
 
 
 class AuctionModelTests(TestCase):
