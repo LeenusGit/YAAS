@@ -28,6 +28,9 @@ def getNewAuction(request):
 
         if form.is_valid():
 
+            print(request.POST)
+            print(form.cleaned_data)
+
             closeDate = (form.cleaned_data.get('closeDate'))
             closeTime = (form.cleaned_data.get('closeTime'))
 
