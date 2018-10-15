@@ -10,7 +10,9 @@
     {% block sidebar %}
         <ul>
         <li><a href="/">Home</a></li>
-        <li><a href="/auctions">Auctions</a></li>
+        <li><a href="{% url 'auctions:index' %}">Auctions</a></li>
+        <li><a href="{% url 'core:register' %}">Register</a></li>
+        <li><a href="{% url 'core:login' %}">Login</a></li>
     {% endblock %}
     </ul>
 </div>
