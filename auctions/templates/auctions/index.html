@@ -3,7 +3,7 @@
 {% block title %}Auction List{% endblock %}
 
 {% block content %}
-    <a href="{% url 'auctions:create' %}">Create New Auction</a>
+    <h2><a href="{% url 'auctions:create' %}">Create New Auction</a></h2>
     {% if auctionList %}
         <ul>
             {% for auction in auctionList %}

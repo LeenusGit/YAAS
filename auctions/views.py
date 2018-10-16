@@ -2,6 +2,7 @@ import datetime
 
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.contrib.auth.models import User
 from django.utils import timezone
 
 from django.views import generic
@@ -25,11 +26,10 @@ def getNewAuction(request):
 
     if request.method == 'POST':
         form = AuctionForm(request.POST)
+        user = request.user
+        print(user)
 
         if form.is_valid():
-
-            print(request.POST)
-            print(form.cleaned_data)
 
             closeDate = (form.cleaned_data.get('closeDate'))
             closeTime = (form.cleaned_data.get('closeTime'))
@@ -39,6 +39,7 @@ def getNewAuction(request):
 
             if deadline < now + datetime.timedelta(hours=72):
                 print('Duration less than 72 hours.')
+                # Duration was too short
                 return render(request, 'auctions/create.html', {'form': form})
 
             return HttpResponseRedirect('success')
