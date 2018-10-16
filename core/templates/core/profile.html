@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+
+    <form method="post">
+        {% csrf_token %}
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ form.email }}</p>
+        <input type="submit" value="Update Email">
+    </form>
+
+    <form method="post">
+        {% csrf_token %}
+        <p>New Password: {{ form.password }}</p>
+        <input type="submit" value="Update Password">
+    </form>
+
+{% endblock %}

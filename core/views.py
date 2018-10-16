@@ -3,9 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django import forms
 
-from .forms import UserRegistrationForm
+from .forms import UserRegistrationForm, UserUpdateForm
 
 
 def home(request):
@@ -48,6 +47,8 @@ def loginView(request):
 
     if request.method == 'POST':
 
+        print(request.POST)
+
         form = AuthenticationForm(request.POST)
 
         username = request.POST['username']
@@ -69,3 +70,28 @@ def loginView(request):
 def logoutView(request):
     logout(request)
     return render(request, 'core/logout.html', {})
+
+
+def profile(request):
+
+    user = request.user
+
+    if request.method == 'POST':
+
+        for obj in request.POST:
+            if obj == 'email':
+
+                if User.objects.filter(email=request.POST['email']):
+                    # Email already exists
+                    pass
+                else:
+                    user.email = request.POST['email']
+
+            if obj == 'password':
+                user.set_password(request.POST['password'])
+
+        user.save()
+        return HttpResponseRedirect('/')
+
+    form = UserUpdateForm({'email': user.email})
+    return render(request, 'core/profile.html', {'user': user, 'form': form})

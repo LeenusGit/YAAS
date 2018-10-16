@@ -52,7 +52,7 @@
             <li><a href="{% url 'core:register' %}">New User</a></li>
             {% if user.is_authenticated %}
                 <li style="float: right"><a href="{% url 'core:logout' %}">Logout</a></li>
-                <li class="user"><a href="core/{{ user.id }}">{{ user }}</a></li>
+                <li class="user"><a href="{% url 'core:profile' %}">{{ user }}</a></li>
             {% else %}
                 <li style="float: right"><a href="{% url 'core:login' %}">Login</a></li>
             {% endif %}
@@ -60,7 +60,7 @@
     {% endblock %}
 </div>
 
-<div id="content", style="padding-left: 16px">
+<div id="content" style="padding-left: 16px">
     {% block content %}
         <h2>Yet Another Auction Site</h2>
     {% endblock %}
