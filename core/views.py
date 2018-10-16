@@ -1,7 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django import forms
+
+from .forms import UserRegistrationForm
 
 
 def home(request):
@@ -12,20 +16,28 @@ def signup(request):
 
     if request.method == 'POST':
 
-        form = UserCreationForm(request.POST)
+        form = UserRegistrationForm(request.POST)
 
         if form.is_valid():
-            form.save()
 
-            username = form.cleaned_data.get('username')
-            rawPassword = form.cleaned_data.get('password1')
-            user = authenticate(username=username, password=rawPassword)
+            formObj = form.cleaned_data
+            username = formObj['username']
+            email = formObj['email']
+            rawPassword = formObj['password']
 
-            login(request, user)
-            return HttpResponseRedirect('home')
+            if not (User.objects.filter(username=username).exists() or User.objects.filter(email=email)):
+
+                User.objects.create_user(username=username, email=email, password=rawPassword)
+                user = authenticate(username=username, password=rawPassword)
+                login(request, user)
+
+                return HttpResponseRedirect('/')
+            else:
+                errorMessage = 'User or email already exists.'
+                return render(request, 'core/register_error.html', {'form': form, 'error': errorMessage})
 
     else:
-        form = UserCreationForm()
+        form = UserRegistrationForm()
 
     return render(request, 'core/register.html', {'form': form})
 
@@ -46,7 +58,8 @@ def loginView(request):
             login(request, user)
             return HttpResponseRedirect('/')
         else:
-            return render(request, 'core/login.html', {'form': form})
+            errorMessage = 'Wrong username or password.'
+            return render(request, 'core/login_error.html', {'form': form, 'error': errorMessage})
 
     else:
         form = AuthenticationForm()

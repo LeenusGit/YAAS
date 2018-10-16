@@ -27,7 +27,6 @@ def getNewAuction(request):
     if request.method == 'POST':
         form = AuctionForm(request.POST)
         user = request.user
-        print(user)
 
         if form.is_valid():
 
