@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Auction Details{% endblock %}
+
+{% block content %}
+    <p>{{ auction.title }}</p>
+    <p>{{ auction.author }}</p>
+    <p>{{ auction.description }}</p>
+    <p>{{ auction.deadline }}</p>
+    <p>{{ auction.minPrice }}€</p>
+    {% block confirm %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'auctions/detail.html' %}
+
+{% block confirm %}
+    <form action="{% url 'auctions:confirm' %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="title" value="{{ auction.title }}">
+        <input type="hidden" name="description" value="{{ auction.description }}">
+        <input type="hidden" name="minPrice" value="{{ auction.minPrice }}">
+        <input type="hidden" name="deadline" value="{{ auction.deadline.isoformat }}">
+        <input type="submit" value="Confirm New Auction">
+    </form>
+{% endblock %}

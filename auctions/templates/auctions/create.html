@@ -4,12 +4,10 @@
 
 {% block content %}
     <h2>Create an Auction</h2>
-    <form method="post">
+    <form action="{% url 'auctions:confirm' %}" method="get">
         {% csrf_token %}
         {{ form.as_p}}
         {% block errorMessage %}{% endblock %}
-        <input type="submit" value="Submit">
+            <input type="submit" value="Submit">
     </form>
 {% endblock %}
-
-

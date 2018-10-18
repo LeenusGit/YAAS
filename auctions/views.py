@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from django.views import generic
+from django.views import generic, View
 from .models import Auction, Bid
 from .forms import AuctionForm
 
@@ -22,16 +22,30 @@ def successfulAuctionPost(request):
     return render(request, 'auctions/success.html', {})
 
 
-def getNewAuction(request):
+def newAuction(request):
 
     user = request.user
-
     if not user.is_authenticated:
         return HttpResponseRedirect('/login/')
+    form = AuctionForm()
+    return render(request, 'auctions/create.html', {'form': form})
 
-    if request.method == 'POST':
 
-        form = AuctionForm(request.POST)
+class AuctionDetailView(View):
+
+    def get(self, request, pk):
+
+        auction = Auction.objects.get(pk=pk)
+
+        return render(request, 'auctions/detail.html', {'auction': auction})
+
+
+class ConfirmAuctionView(View):
+
+    def get(self, request):
+
+        user = request.user
+        form = AuctionForm(request.GET)
         if form.is_valid():
 
             title = (form.cleaned_data.get('title'))
@@ -41,32 +55,92 @@ def getNewAuction(request):
             closeTime = (form.cleaned_data.get('closeTime'))
 
             deadline = datetime.combine(closeDate, closeTime)
-            now = datetime.now()
 
-            if deadline < now + timedelta(hours=72):
-
+            if deadline < datetime.now() + timedelta(hours=72):
                 # POSTED auction duration was too short
                 errorMessage = 'Auction duration has to be longer than 72 hours.'
                 return render(request, 'auctions/create_error.html', {'form': form, 'error': errorMessage})
 
             awareDeadline = timezone.make_aware(deadline)
 
-            auction = Auction.objects.create(
+            auction = Auction(
                 author=user,
                 title=title,
                 description=description,
                 minPrice=minPrice,
                 deadline=awareDeadline,
-                state='Active',
             )
-            return render(request, 'auctions/success.html', {'auction': auction})
+            return render(request, 'auctions/confirm.html', {'auction': auction, 'form': form})
 
-    else:
-        form = AuctionForm()
+        return render(request, 'auctions/create.html', {'form': form})
 
-    return render(request, 'auctions/create.html', {'form': form})
+    def post(self, request):
+
+        user = request.user
+        data = request.POST
+        auction = Auction(
+            author=user,
+            title=data['title'],
+            description=data['description'],
+            minPrice=data['minPrice'],
+            deadline=data['deadline'],
+        )
+        auction.save()
+        return HttpResponseRedirect('success')
 
 
-def auctionDetailView(request):
-    # TODO: list auctions details
-    return None
+# def confirmAuction(request):
+#
+#     user = request.user
+#
+#     if request.method == 'GET':
+#
+#         form = AuctionForm(request.GET)
+#         if form.is_valid():
+#
+#             title = (form.cleaned_data.get('title'))
+#             description = (form.cleaned_data.get('description'))
+#             minPrice = (form.cleaned_data.get('minPrice'))
+#             closeDate = (form.cleaned_data.get('closeDate'))
+#             closeTime = (form.cleaned_data.get('closeTime'))
+#
+#             deadline = datetime.combine(closeDate, closeTime)
+#
+#             if deadline < datetime.now() + timedelta(hours=72):
+#                 # POSTED auction duration was too short
+#                 errorMessage = 'Auction duration has to be longer than 72 hours.'
+#                 return render(request, 'auctions/create_error.html', {'form': form, 'error': errorMessage})
+#
+#             awareDeadline = timezone.make_aware(deadline)
+#
+#             print(awareDeadline)
+#
+#             auction = Auction(
+#                 author=user,
+#                 title=title,
+#                 description=description,
+#                 minPrice=minPrice,
+#                 deadline=awareDeadline,
+#             )
+#             return render(request, 'auctions/confirm.html', {'auction': auction, 'form': form})
+#         else:
+#             return render(request, 'auctions/create.html', {'form': form})
+#
+#     if request.method == 'POST':
+#         data = request.POST
+#
+#         auction = Auction(
+#             author=user,
+#             title=data['title'],
+#             description=data['description'],
+#             minPrice=data['minPrice'],
+#             deadline=data['deadline'],
+#         )
+#         auction.save()
+#
+#         return HttpResponseRedirect('success')
+#
+#     form = AuctionForm()
+#     return render(request, 'auctions/create.html', {'form': form})
+
+
