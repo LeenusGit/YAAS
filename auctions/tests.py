@@ -1,8 +1,8 @@
-import datetime
+from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
 
@@ -16,7 +16,7 @@ def createDefinedAuction():
     title = 'Ford Focus'
     description = 'A car of brand Ford and model Focus'
     durationDays = 1
-    deadline = timezone.now() + datetime.timedelta(days=durationDays)
+    deadline = timezone.now() + timedelta(days=durationDays)
     minPrice = 10.50
 
     return Auction.objects.create(author=author, title=title, description=description,
@@ -62,6 +62,18 @@ class CreateAuctionFormTests(TestCase):
                     }
         form = AuctionForm(data=formData)
         self.assertEqual(form.is_valid(), True)
+
+    def testCreatePastAuction(self):
+        c = Client()
+        pastTime = timezone.make_aware(datetime.now() - timedelta(days=1))
+        data = {
+            'title': 'Ford Fiesta',
+            'description': 'A car of brand Ford and model Fiesta',
+            'minPrice': 12.3,
+            'deadline': pastTime,
+                    }
+        response = c.post(reverse('auctions:confirm'), data)
+        self.assertEqual(response.status_code, 400)
 
 
 class AuctionModelTests(TestCase):
