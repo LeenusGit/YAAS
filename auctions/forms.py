@@ -34,3 +34,12 @@ class AuctionForm(forms.Form):
         widget=forms.TimeInput(format='%H:%M'),
         initial=datetime.datetime.today(),
     )
+
+
+class SearchForm(forms.Form):
+
+    search_term = forms.CharField(
+        required=False,
+        label='Search Auctions',
+        max_length=100,
+    )

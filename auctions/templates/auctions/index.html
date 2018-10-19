@@ -3,15 +3,20 @@
 {% block title %}Auction List{% endblock %}
 
 {% block content %}
-    <h2><a href="{% url 'auctions:create' %}">Create New Auction</a></h2>
-    {% if auctionList %}
+    <h3><a href="{% url 'auctions:create' %}">Create New Auction</a></h3>
+    <br>
+    <form method="get">
+    {{ form }}
+    <input type="submit" value="Search">
+    </form>
+
+    {% if auction_list %}
         <ul>
-            {% for auction in auctionList %}
+            {% for auction in auction_list %}
                 <li>
                     <a href="{% url 'auctions:detail' auction.id %}">
                         {{ auction.title }}
                     </a>
-{#                    <p>{{ auction.title }}</p>#}
                 </li>
             {% endfor %}
         </ul>

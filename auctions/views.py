@@ -10,15 +10,25 @@ from django.utils.dateparse import parse_datetime
 
 from django.views import generic, View
 from .models import Auction, Bid
-from .forms import AuctionForm
+from .forms import AuctionForm, SearchForm
 
 
-class AuctionIndexView(generic.ListView):
-    template_name = 'auctions/index.html'
-    context_object_name = 'auctionList'
+class AuctionIndexView(View):
 
-    def get_queryset(self):
-        return Auction.objects.all()
+    def get(self, request):
+
+        # search_term = request.GET['search_term']
+        form = SearchForm(request.GET)
+
+        if form.is_valid():
+            search_term = form.cleaned_data.get('search_term')
+            auction_list = Auction.objects.filter(title__icontains=search_term)
+
+            return render(request, 'auctions/index.html', {'auction_list': auction_list, 'search_term': search_term, 'form': form})
+
+        form = SearchForm()
+        auction_list = Auction.objects.all()
+        return render(request, 'auctions/index.html', {'auction_list': auction_list, 'form': form})
 
 
 def newAuction(request):
