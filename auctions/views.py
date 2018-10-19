@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.core.mail import send_mail
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseNotAllowed
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -33,6 +33,10 @@ def newAuction(request):
 def editAuction(request, pk):
 
     auction = get_object_or_404(Auction, pk=pk)
+    user = request.user
+
+    if user.username != auction.author:
+        return HttpResponseNotAllowed('not_allowed')
 
     if request.method == 'POST':
         description = request.POST['description']
@@ -51,8 +55,14 @@ class AuctionDetailView(View):
     def get(self, request, pk):
 
         auction = get_object_or_404(Auction, pk=pk)
+        user = request.user
 
-        return render(request, 'auctions/detail.html', {'auction': auction})
+        if user.username == auction.author:
+            isPermittedtoEdit = True
+        else:
+            isPermittedtoEdit = False
+
+        return render(request, 'auctions/detail.html', {'auction': auction, 'isPermittedToEdit': isPermittedtoEdit})
 
 
 class ConfirmAuctionView(View):
@@ -60,8 +70,13 @@ class ConfirmAuctionView(View):
     def get(self, request):
 
         user = request.user
+        if not user.is_authenticated:
+            return HttpResponseRedirect('/login/')
+
         form = AuctionForm(request.GET)
         if form.is_valid():
+
+            # TODO: Rewrite with validateAuction
 
             title = (form.cleaned_data.get('title'))
             description = (form.cleaned_data.get('description'))
@@ -92,6 +107,8 @@ class ConfirmAuctionView(View):
     def post(self, request):
 
         user = request.user
+        # TODO: Confirm user is authorized to POST auction
+
         email = user.email
         data = request.POST
         auction = Auction(
@@ -109,6 +126,7 @@ class ConfirmAuctionView(View):
             print('auction did not pass validation')
             return HttpResponseBadRequest('bad_request')
         else:
+            #POST was successful
             # TODO: Send confirmation email
             # send_mail('Test', 'Test Message', 'from@test.com', 'to@test.com')
             auction.save()

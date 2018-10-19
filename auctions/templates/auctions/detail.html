@@ -8,7 +8,9 @@
 
     {% block description %}
         <p>{{ auction.description }}</p>
+        {% if isPermittedToEdit %}
         <a href="{% url 'auctions:edit' auction.id %}">Edit description</a>
+        {% endif %}
     {% endblock %}
 
     <p>{{ auction.deadline }}</p>
