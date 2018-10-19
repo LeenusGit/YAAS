@@ -43,6 +43,7 @@ def signup(request):
 
 def login_view(request):
 
+    # If user is logging in while already logged in as a different user
     logout(request)
 
     if request.method == 'POST':

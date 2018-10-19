@@ -10,7 +10,7 @@
         {% csrf_token %}
         <input type="hidden" name="title" value="{{ auction.title }}">
         <input type="hidden" name="description" value="{{ auction.description }}">
-        <input type="hidden" name="minPrice" value="{{ auction.min_price }}">
+        <input type="hidden" name="min_price" value="{{ auction.min_price }}">
         <input type="hidden" name="deadline" value="{{ auction.deadline.isoformat }}">
         <input type="submit" value="Confirm New Auction">
     </form>

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
-from django.core.mail import send_mail
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseNotAllowed
+from django.core.mail import send_mail, EmailMessage
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -50,7 +50,7 @@ def edit_auction(request, pk):
     user = request.user
 
     if user.username != auction.author:
-        return HttpResponseNotAllowed('not_allowed')
+        return HttpResponse(status=401, reason='Not the author of the auction')
 
     if request.method == 'POST':
         description = request.POST['description']
@@ -114,6 +114,7 @@ class ConfirmAuctionView(View):
                 min_price=min_price,
                 deadline=aware_deadline,
             )
+
             return render(request, 'auctions/confirm.html', {'auction': auction, 'form': form})
 
         return render(request, 'auctions/create.html', {'form': form})
@@ -123,7 +124,6 @@ class ConfirmAuctionView(View):
         user = request.user
         # TODO: Confirm user is authorized to POST auction
 
-        # email = user.email
         data = request.POST
         auction = Auction(
             author=user,
@@ -139,8 +139,7 @@ class ConfirmAuctionView(View):
             return HttpResponseBadRequest('bad_request')
         else:
             # POST was successful
-            # TODO: Send confirmation email
-            # send_mail('Test', 'Test Message', 'from@test.com', 'to@test.com')
+            send_confirm_email(user, auction)
             auction.save()
             return HttpResponseRedirect('success')
 
@@ -162,6 +161,18 @@ def validate_auction(auction):
         return error_message
 
     return None
+
+
+def send_confirm_email(user, auction):
+    email = user.email
+    title = auction.title
+
+    subject = '%s confirmation' % title
+    message = 'Dear %s,\n Your auction %s has been submitted to YAAS\n' % (user.username, title)
+    from_address = 'admin@yaas.com'
+    to_address_list = [email, ]
+
+    send_mail(subject, message, from_address, to_address_list)
 
 
 def successful_auction_post(request):
