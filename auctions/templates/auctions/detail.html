@@ -15,4 +15,6 @@
 
     <p>{{ auction.deadline }}</p>
     <p>{{ auction.min_price }}€</p>
+
+    <a href="{% url 'bids:bid' auction.id%}">New Bid</a>
 {% endblock %}

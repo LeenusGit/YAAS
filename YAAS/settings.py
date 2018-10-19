@@ -34,6 +34,7 @@ EMAIL_FILE_PATH = 'emails/sent/'
 # Application definition
 
 INSTALLED_APPS = [
+    'bids.apps.BidsConfig',
     'core.apps.CoreConfig',
     'auctions.apps.AuctionsConfig',
     'polls.apps.PollsConfig',

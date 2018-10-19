@@ -1,15 +1,14 @@
 from datetime import datetime, timedelta
 
 from django.core.mail import send_mail, EmailMessage
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-
 from django.views import View
-from .models import Auction, Bid
+
+from .models import Auction
 from .forms import AuctionForm, SearchForm
 
 
@@ -90,7 +89,7 @@ class ConfirmAuctionView(View):
         form = AuctionForm(request.GET)
         if form.is_valid():
 
-            # TODO: Rewrite with validate_auction
+            # TODO: Rewrite with validate_auction()
 
             title = (form.cleaned_data.get('title'))
             description = (form.cleaned_data.get('description'))
