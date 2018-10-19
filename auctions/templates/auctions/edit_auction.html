@@ -4,7 +4,7 @@
     <form method="post">
         {% csrf_token %}
         <label>
-            <textarea name="description" rows="10" cols="50" required>{{ oldDescription }}</textarea>
+            <textarea name="description" rows="10" cols="50" required>{{ old_description }}</textarea>
         </label>
         <br>
         <input type="submit" value="Submit">

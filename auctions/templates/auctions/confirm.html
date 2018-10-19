@@ -5,12 +5,12 @@
     <p>{{ auction.author }}</p>
     <p>{{ auction.description }}</p>
     <p>{{ auction.deadline }}</p>
-    <p>{{ auction.minPrice }}€</p>
+    <p>{{ auction.min_price }}€</p>
     <form action="{% url 'auctions:confirm' %}" method="post">
         {% csrf_token %}
         <input type="hidden" name="title" value="{{ auction.title }}">
         <input type="hidden" name="description" value="{{ auction.description }}">
-        <input type="hidden" name="minPrice" value="{{ auction.minPrice }}">
+        <input type="hidden" name="minPrice" value="{{ auction.min_price }}">
         <input type="hidden" name="deadline" value="{{ auction.deadline.isoformat }}">
         <input type="submit" value="Confirm New Auction">
     </form>

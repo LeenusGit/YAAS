@@ -7,7 +7,7 @@
     <form action="{% url 'auctions:confirm' %}" method="get">
         {% csrf_token %}
         {{ form.as_p}}
-        {% block errorMessage %}{% endblock %}
+        {% block error_message %}{% endblock %}
             <input type="submit" value="Submit">
     </form>
 {% endblock %}

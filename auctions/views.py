@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from django.views import generic, View
+from django.views import View
 from .models import Auction, Bid
 from .forms import AuctionForm, SearchForm
 
@@ -17,21 +17,25 @@ class AuctionIndexView(View):
 
     def get(self, request):
 
-        # search_term = request.GET['search_term']
         form = SearchForm(request.GET)
 
         if form.is_valid():
             search_term = form.cleaned_data.get('search_term')
             auction_list = Auction.objects.filter(title__icontains=search_term)
 
-            return render(request, 'auctions/index.html', {'auction_list': auction_list, 'search_term': search_term, 'form': form})
+            return render(request, 'auctions/index.html', {
+                'auction_list': auction_list,
+                'search_term': search_term,
+                'form': form
+            })
 
-        form = SearchForm()
-        auction_list = Auction.objects.all()
-        return render(request, 'auctions/index.html', {'auction_list': auction_list, 'form': form})
+        else:
+            form = SearchForm()
+            auction_list = Auction.objects.all()
+            return render(request, 'auctions/index.html', {'auction_list': auction_list, 'form': form})
 
 
-def newAuction(request):
+def new_auction(request):
 
     user = request.user
     if not user.is_authenticated:
@@ -40,7 +44,7 @@ def newAuction(request):
     return render(request, 'auctions/create.html', {'form': form})
 
 
-def editAuction(request, pk):
+def edit_auction(request, pk):
 
     auction = get_object_or_404(Auction, pk=pk)
     user = request.user
@@ -55,9 +59,9 @@ def editAuction(request, pk):
 
         return HttpResponseRedirect(reverse('auctions:detail', args=(auction.id,)))
 
-    oldDescription = auction.description
+    old_description = auction.description
 
-    return render(request, 'auctions/edit_auction.html', {'auction': auction, 'oldDescription': oldDescription})
+    return render(request, 'auctions/edit_auction.html', {'auction': auction, 'old_description': old_description})
 
 
 class AuctionDetailView(View):
@@ -68,11 +72,11 @@ class AuctionDetailView(View):
         user = request.user
 
         if user.username == auction.author:
-            isPermittedtoEdit = True
+            is_permitted_to_edit = True
         else:
-            isPermittedtoEdit = False
+            is_permitted_to_edit = False
 
-        return render(request, 'auctions/detail.html', {'auction': auction, 'isPermittedToEdit': isPermittedtoEdit})
+        return render(request, 'auctions/detail.html', {'auction': auction, 'is_permitted_to_edit': is_permitted_to_edit})
 
 
 class ConfirmAuctionView(View):
@@ -86,29 +90,29 @@ class ConfirmAuctionView(View):
         form = AuctionForm(request.GET)
         if form.is_valid():
 
-            # TODO: Rewrite with validateAuction
+            # TODO: Rewrite with validate_auction
 
             title = (form.cleaned_data.get('title'))
             description = (form.cleaned_data.get('description'))
-            minPrice = (form.cleaned_data.get('minPrice'))
-            closeDate = (form.cleaned_data.get('closeDate'))
-            closeTime = (form.cleaned_data.get('closeTime'))
+            min_price = (form.cleaned_data.get('min_price'))
+            close_date = (form.cleaned_data.get('close_date'))
+            close_time = (form.cleaned_data.get('close_time'))
 
-            deadline = datetime.combine(closeDate, closeTime)
+            deadline = datetime.combine(close_date, close_time)
 
             if deadline < datetime.now() + timedelta(hours=72):
                 # POSTED auction duration was too short
-                errorMessage = 'Auction duration has to be longer than 72 hours.'
-                return render(request, 'auctions/create_error.html', {'form': form, 'error': errorMessage})
+                error_message = 'Auction duration has to be longer than 72 hours.'
+                return render(request, 'auctions/create_error.html', {'form': form, 'error': error_message})
 
-            awareDeadline = timezone.make_aware(deadline)
+            aware_deadline = timezone.make_aware(deadline)
 
             auction = Auction(
                 author=user,
                 title=title,
                 description=description,
-                minPrice=minPrice,
-                deadline=awareDeadline,
+                min_price=min_price,
+                deadline=aware_deadline,
             )
             return render(request, 'auctions/confirm.html', {'auction': auction, 'form': form})
 
@@ -119,52 +123,50 @@ class ConfirmAuctionView(View):
         user = request.user
         # TODO: Confirm user is authorized to POST auction
 
-        email = user.email
+        # email = user.email
         data = request.POST
         auction = Auction(
             author=user,
             title=data['title'],
             description=data['description'],
-            minPrice=data['minPrice'],
+            min_price=data['min_price'],
             deadline=data['deadline'],
         )
 
-        error = validateAuction(auction)
+        error = validate_auction(auction)
 
         if error is not None:
-            print(error)
-            print('auction did not pass validation')
             return HttpResponseBadRequest('bad_request')
         else:
-            #POST was successful
+            # POST was successful
             # TODO: Send confirmation email
             # send_mail('Test', 'Test Message', 'from@test.com', 'to@test.com')
             auction.save()
             return HttpResponseRedirect('success')
 
 
-def validateAuction(auction):
+def validate_auction(auction):
 
     deadline = (parse_datetime(auction.deadline))
     now = timezone.make_aware(datetime.now())
-    threeDaysFromNow = timezone.make_aware(datetime.now() + timedelta(hours=72))
+    three_days_from_now = timezone.make_aware(datetime.now() + timedelta(hours=72))
 
-    if deadline < threeDaysFromNow:
+    if deadline < three_days_from_now:
         # auction duration was too short
-        errorMessage = 'Auction duration has to be longer than 72 hours.'
-        return errorMessage
+        error_message = 'Auction duration has to be longer than 72 hours.'
+        return error_message
 
     if deadline < now:
         # auction close date was in the past
-        errorMessage = 'Auction close time is in the past'
-        return errorMessage
+        error_message = 'Auction close time is in the past'
+        return error_message
 
     return None
 
 
-def successfulAuctionPost(request):
+def successful_auction_post(request):
     return render(request, 'auctions/success.html', {})
 
 
-def badRequest(request):
+def bad_request(request):
     return render(request, 'auctions/bad_request.html', {})

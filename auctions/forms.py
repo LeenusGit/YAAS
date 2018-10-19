@@ -1,7 +1,6 @@
 import datetime
 
 from django import forms
-from django.utils import timezone
 
 
 class AuctionForm(forms.Form):
@@ -16,20 +15,20 @@ class AuctionForm(forms.Form):
         widget=forms.Textarea,
         initial='Test description'
     )
-    minPrice = forms.DecimalField(
+    min_price = forms.DecimalField(
         label='Starting price',
         max_digits=8,
         decimal_places=2,
         min_value=0,
         initial=20)
 
-    closeDate = forms.DateField(
+    close_date = forms.DateField(
         label='Auction close date (dd.mm.yyyy)',
         input_formats=('%d.%m.%Y',),
         widget=forms.DateInput(format='%d.%m.%Y'),
         initial=datetime.date.today() + datetime.timedelta(days=4),
     )
-    closeTime = forms.TimeField(
+    close_time = forms.TimeField(
         label='Auction close time (hh:mm)',
         widget=forms.TimeInput(format='%H:%M'),
         initial=datetime.datetime.today(),

@@ -19,21 +19,21 @@ def signup(request):
 
         if form.is_valid():
 
-            formObj = form.cleaned_data
-            username = formObj['username']
-            email = formObj['email']
-            rawPassword = formObj['password']
+            form_obj = form.cleaned_data
+            username = form_obj['username']
+            email = form_obj['email']
+            raw_password = form_obj['password']
 
             if not (User.objects.filter(username=username).exists() or User.objects.filter(email=email)):
 
-                User.objects.create_user(username=username, email=email, password=rawPassword)
-                user = authenticate(username=username, password=rawPassword)
+                User.objects.create_user(username=username, email=email, password=raw_password)
+                user = authenticate(username=username, password=raw_password)
                 login(request, user)
 
                 return HttpResponseRedirect('/')
             else:
-                errorMessage = 'User or email already exists.'
-                return render(request, 'core/register_error.html', {'form': form, 'error': errorMessage})
+                error_message = 'User or email already exists.'
+                return render(request, 'core/register_error.html', {'form': form, 'error': error_message})
 
     else:
         form = UserRegistrationForm()
@@ -41,7 +41,7 @@ def signup(request):
     return render(request, 'core/register.html', {'form': form})
 
 
-def loginView(request):
+def login_view(request):
 
     logout(request)
 
@@ -59,15 +59,15 @@ def loginView(request):
             login(request, user)
             return HttpResponseRedirect('/')
         else:
-            errorMessage = 'Wrong username or password.'
-            return render(request, 'core/login_error.html', {'form': form, 'error': errorMessage})
+            error_message = 'Wrong username or password.'
+            return render(request, 'core/login_error.html', {'form': form, 'error': error_message})
 
     else:
         form = AuthenticationForm()
         return render(request, 'core/login.html', {'form': form})
 
 
-def logoutView(request):
+def logout_view(request):
     logout(request)
     return render(request, 'core/logout.html', {})
 
@@ -78,8 +78,8 @@ def profile(request):
 
     if request.method == 'POST':
 
-        for obj in request.POST:
-            if obj == 'email':
+        for field in request.POST:
+            if field == 'email':
 
                 if User.objects.filter(email=request.POST['email']):
                     # Email already exists
@@ -87,7 +87,7 @@ def profile(request):
                 else:
                     user.email = request.POST['email']
 
-            if obj == 'password':
+            if field == 'password':
                 user.set_password(request.POST['password'])
 
         user.save()
