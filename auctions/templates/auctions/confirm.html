@@ -1,6 +1,11 @@
-{% extends 'auctions/detail.html' %}
+{% extends 'base.html' %}
 
-{% block confirm %}
+{% block content %}
+    <p>{{ auction.title }}</p>
+    <p>{{ auction.author }}</p>
+    <p>{{ auction.description }}</p>
+    <p>{{ auction.deadline }}</p>
+    <p>{{ auction.minPrice }}€</p>
     <form action="{% url 'auctions:confirm' %}" method="post">
         {% csrf_token %}
         <input type="hidden" name="title" value="{{ auction.title }}">
@@ -8,5 +13,10 @@
         <input type="hidden" name="minPrice" value="{{ auction.minPrice }}">
         <input type="hidden" name="deadline" value="{{ auction.deadline.isoformat }}">
         <input type="submit" value="Confirm New Auction">
+    </form>
+    <br>
+    <form action="{% url 'auctions:create' %}" method="get">
+        {% csrf_token %}
+        <input type="submit" value="Discard">
     </form>
 {% endblock %}

@@ -5,8 +5,12 @@
 {% block content %}
     <p>{{ auction.title }}</p>
     <p>{{ auction.author }}</p>
-    <p>{{ auction.description }}</p>
+
+    {% block description %}
+        <p>{{ auction.description }}</p>
+        <a href="{% url 'auctions:edit' auction.id %}">Edit description</a>
+    {% endblock %}
+
     <p>{{ auction.deadline }}</p>
     <p>{{ auction.minPrice }}€</p>
-    {% block confirm %}{% endblock %}
 {% endblock %}

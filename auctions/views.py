@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 
+from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -19,10 +21,6 @@ class AuctionIndexView(generic.ListView):
         return Auction.objects.all()
 
 
-def successfulAuctionPost(request):
-    return render(request, 'auctions/success.html', {})
-
-
 def newAuction(request):
 
     user = request.user
@@ -32,11 +30,27 @@ def newAuction(request):
     return render(request, 'auctions/create.html', {'form': form})
 
 
+def editAuction(request, pk):
+
+    auction = get_object_or_404(Auction, pk=pk)
+
+    if request.method == 'POST':
+        description = request.POST['description']
+        auction.description = description
+        auction.save()
+
+        return HttpResponseRedirect(reverse('auctions:detail', args=(auction.id,)))
+
+    oldDescription = auction.description
+
+    return render(request, 'auctions/edit_auction.html', {'auction': auction, 'oldDescription': oldDescription})
+
+
 class AuctionDetailView(View):
 
     def get(self, request, pk):
 
-        auction = Auction.objects.get(pk=pk)
+        auction = get_object_or_404(Auction, pk=pk)
 
         return render(request, 'auctions/detail.html', {'auction': auction})
 
@@ -78,6 +92,7 @@ class ConfirmAuctionView(View):
     def post(self, request):
 
         user = request.user
+        email = user.email
         data = request.POST
         auction = Auction(
             author=user,
@@ -94,29 +109,33 @@ class ConfirmAuctionView(View):
             print('auction did not pass validation')
             return HttpResponseBadRequest('bad_request')
         else:
+            # TODO: Send confirmation email
+            # send_mail('Test', 'Test Message', 'from@test.com', 'to@test.com')
             auction.save()
             return HttpResponseRedirect('success')
 
 
 def validateAuction(auction):
 
-    print(auction.deadline)
-
     deadline = (parse_datetime(auction.deadline))
     now = timezone.make_aware(datetime.now())
-    threeDaysFromNow = timezone.make_aware(datetime.now() - timedelta(hours=72))
+    threeDaysFromNow = timezone.make_aware(datetime.now() + timedelta(hours=72))
 
     if deadline < threeDaysFromNow:
-        # POSTED auction duration was too short
+        # auction duration was too short
         errorMessage = 'Auction duration has to be longer than 72 hours.'
         return errorMessage
 
     if deadline < now:
-        # POSTED auction duration was too short
+        # auction close date was in the past
         errorMessage = 'Auction close time is in the past'
         return errorMessage
 
     return None
+
+
+def successfulAuctionPost(request):
+    return render(request, 'auctions/success.html', {})
 
 
 def badRequest(request):
