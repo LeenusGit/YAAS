@@ -1,5 +1,9 @@
 {% extends 'auctions/detail.html' %}
 
 {% block bid %}
-    <p>Bid placeholder</p>
+    <form method="post">
+        {% csrf_token %}
+        {{form}}
+        <input type="submit" value="Submit">
+    </form>
 {% endblock %}
