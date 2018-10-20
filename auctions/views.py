@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.contrib.auth.models import User
 from django.core.mail import send_mail, EmailMessage
 from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404
@@ -8,6 +9,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views import View
 
+from bids.models import Bid
 from .models import Auction
 from .forms import AuctionForm, SearchForm
 
@@ -20,7 +22,7 @@ class AuctionIndexView(View):
 
         if form.is_valid():
             search_term = form.cleaned_data.get('search_term')
-            auction_list = Auction.objects.filter(title__icontains=search_term)
+            auction_list = Auction.objects.filter(title__icontains=search_term, state='Active')
 
             return render(request, 'auctions/index.html', {
                 'auction_list': auction_list,
@@ -30,7 +32,7 @@ class AuctionIndexView(View):
 
         else:
             form = SearchForm()
-            auction_list = Auction.objects.all()
+            auction_list = Auction.objects.filter(state='Active')
             return render(request, 'auctions/index.html', {'auction_list': auction_list, 'form': form})
 
 
@@ -41,6 +43,24 @@ def new_auction(request):
         return HttpResponseRedirect('/login/')
     form = AuctionForm()
     return render(request, 'auctions/create.html', {'form': form})
+
+
+def ban_auction(request, pk):
+
+    # Only allow superusers
+    if not request.user.is_superuser:
+        return HttpResponse(status=401)
+
+    auction = get_object_or_404(Auction, pk=pk)
+
+    if request.method == 'POST':
+        auction.state = 'Banned'
+        auction.save()
+
+        creator = User.objects.get(username=auction.author)
+        send_ban_email(creator, auction)
+
+    return HttpResponseRedirect('/auctions/')
 
 
 def edit_auction(request, pk):
@@ -70,12 +90,23 @@ class AuctionDetailView(View):
         auction = get_object_or_404(Auction, pk=pk)
         user = request.user
 
+        if user.is_superuser:
+            is_user_admin = True
+        else:
+            is_user_admin = False
+
         if user.username == auction.author:
             is_permitted_to_edit = True
         else:
             is_permitted_to_edit = False
 
-        return render(request, 'auctions/detail.html', {'auction': auction, 'is_permitted_to_edit': is_permitted_to_edit})
+        context = {
+            'auction': auction,
+            'is_permitted_to_edit': is_permitted_to_edit,
+            'admin': is_user_admin,
+        }
+
+        return render(request, 'auctions/detail.html', context)
 
 
 class ConfirmAuctionView(View):
@@ -121,7 +152,10 @@ class ConfirmAuctionView(View):
     def post(self, request):
 
         user = request.user
-        # TODO: Confirm user is authorized to POST auction
+        if not user.is_authenticated:
+            return HttpResponseRedirect('/login/')
+
+        # TODO: Rewrite the auction data to a form
 
         data = request.POST
         auction = Auction(
@@ -174,9 +208,37 @@ def send_confirm_email(user, auction):
     send_mail(subject, message, from_address, to_address_list)
 
 
+def send_ban_email(user, auction):
+
+    email = user.email
+    title = auction.title
+
+    subject = '%s Ban' % title
+    message_to_creator = 'Hi {},\n Your auction {} has been been banned due to violation of ' \
+                         'terms of service'.format(user.username, title)
+    from_address = 'admin@yaas.com'
+    creator_email_list = [email, ]
+
+    message_to_bidders = 'We regret to inform you that the auction {} has benn banned ' \
+                         'due to violation of terms of service'.format(title)
+    bidder_email_list = []
+    bid_list = Bid.objects.filter(auction_id=auction.id)
+
+    for bid in bid_list:
+        bidder = User.objects.get(username=bid.bidder)
+        bidder_email_list.append(bidder.email)
+
+    # TODO: Make sure it works when auction has no bidders
+    print(bidder_email_list)
+
+    send_mail(subject, message_to_creator, from_address, creator_email_list)
+    send_mail(subject, message_to_bidders, from_address, bidder_email_list)
+
+
 def successful_auction_post(request):
     return render(request, 'auctions/success.html', {})
 
 
 def bad_request(request):
     return render(request, 'auctions/bad_request.html', {})
+

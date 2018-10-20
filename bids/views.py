@@ -29,8 +29,11 @@ class BidView(View):
         auction = get_object_or_404(Auction, pk=pk)
         form = BidForm(auction, request.POST)
 
-        if bidder.username == auction.author or bidder.username == auction.leader:
-            # Bidder is the seller or has made the highest bid
+        if bidder.username == auction.author \
+                or bidder.username == auction.leader \
+                or auction.state != 'Active':
+            # Bidder is the seller or has made the highest bid or auction is not active
+            # TODO: make sure POST request to banned auctions are ignored
             # TODO: Handle in a user-friendly way
             return HttpResponse(status=400)
 
