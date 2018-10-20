@@ -40,39 +40,40 @@ class BidView(View):
 
             if bid_amount > auction.min_price:
 
-                # TODO: Test that this is working when no leader exist
-
                 # Update the min_price
                 auction.min_price = bid_amount
 
-                old_leader = User.objects.get(username=auction.leader)
+                # Ignore the previous leader if there is none
+                if auction.leader != '':
+                    old_leader = User.objects.get(username=auction.leader)
+                    send_new_bid_mail(old_leader, auction, bid_amount)
+
+                # Inform the auction creator
                 creator = User.objects.get(username=auction.author)
+                send_new_bid_mail(creator, auction, bid_amount)
 
-                send_beaten_mail(old_leader, auction, bid_amount)
-                send_seller_mail(creator, auction, bid_amount)
-
+                # Update the auction leader
                 auction.leader = bidder.username
 
+                # Save the bid in the database
                 Bid.objects.create(auction_id=auction.id, amount=bid_amount, bidder=bidder.username)
                 auction.save()
 
                 return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
+        else:
+            # The form is not valid
+            return render(request, 'bids/new_bid.html', {'auction': auction, 'form': form})
 
-        return render(request, 'bids/new_bid.html', {'auction': auction, 'form': form})
 
+def send_new_bid_mail(user, auction, bid_amount):
 
-def send_beaten_mail(old_leader, auction, bid_amount):
-
-    email = old_leader.email
+    email = user.email
     title = auction.title
 
     subject = 'New bid on auction: %s' % title
-    message = 'A new bid of {} had been registered on auction: {}'.format(bid_amount, title)
+    message = 'A new bid of {} has been registered on auction: {}'.format(bid_amount, title)
     from_address = 'admin@yaas.com'
     to_address_list = [email, ]
 
     send_mail(subject, message, from_address, to_address_list)
 
-
-def send_seller_mail(seller, auction, bid_amount):
-    pass

@@ -167,7 +167,7 @@ def send_confirm_email(user, auction):
     title = auction.title
 
     subject = '%s confirmation' % title
-    message = 'Dear %s,\n Your auction %s has been submitted to YAAS\n' % (user.username, title)
+    message = 'Hi %s,\n Your auction %s has been submitted to YAAS' % (user.username, title)
     from_address = 'admin@yaas.com'
     to_address_list = [email, ]
 
