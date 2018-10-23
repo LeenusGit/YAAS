@@ -4,7 +4,9 @@
 
 {% block content %}
     <h3><a href="{% url 'auctions:create' %}">Create New Auction</a></h3>
-    <br>
+    {% if is_user_admin %}
+        <p><a href="{% url 'auctions:banned' %}">Banned auctions</a></p>
+    {%  endif %}
     <form method="get">
     {{ form }}
     <input type="submit" value="Search">

@@ -6,6 +6,7 @@ app_name = 'auctions'
 
 urlpatterns = [
     path('', views.AuctionIndexView.as_view(), name='index'),
+    path('banned/', views.banned_auctions, name='banned'),
     path('<int:pk>/', views.AuctionDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.edit_auction, name='edit'),
     path('<int:pk>/ban_auction/', views.ban_auction, name='ban_auction'),

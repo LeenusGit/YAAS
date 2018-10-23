@@ -19,6 +19,11 @@ class AuctionIndexView(View):
     def get(self, request):
 
         form = SearchForm(request.GET)
+        user = request.user
+        if user.is_superuser:
+            is_user_admin = True
+        else:
+            is_user_admin = False
 
         if form.is_valid():
             search_term = form.cleaned_data.get('search_term')
@@ -27,7 +32,8 @@ class AuctionIndexView(View):
             return render(request, 'auctions/index.html', {
                 'auction_list': auction_list,
                 'search_term': search_term,
-                'form': form
+                'form': form,
+                'is_user_admin': is_user_admin
             })
 
         else:
@@ -209,29 +215,26 @@ def send_confirm_email(user, auction):
 
 
 def send_ban_email(user, auction):
-
+    # Should send emails to the creator and the bidders of the banned auction
     email = user.email
     title = auction.title
+    from_address = 'admin@yaas.com'
 
     subject = '%s Ban' % title
     message_to_creator = 'Hi {},\n Your auction {} has been been banned due to violation of ' \
                          'terms of service'.format(user.username, title)
-    from_address = 'admin@yaas.com'
     creator_email_list = [email, ]
+    send_mail(subject, message_to_creator, from_address, creator_email_list)
 
     message_to_bidders = 'We regret to inform you that the auction {} has benn banned ' \
                          'due to violation of terms of service'.format(title)
     bidder_email_list = []
     bid_list = Bid.objects.filter(auction_id=auction.id)
-
+    # Fill bid_list with emails of the bidders
     for bid in bid_list:
         bidder = User.objects.get(username=bid.bidder)
         bidder_email_list.append(bidder.email)
 
-    # TODO: Make sure it works when auction has no bidders
-    print(bidder_email_list)
-
-    send_mail(subject, message_to_creator, from_address, creator_email_list)
     send_mail(subject, message_to_bidders, from_address, bidder_email_list)
 
 
@@ -242,3 +245,22 @@ def successful_auction_post(request):
 def bad_request(request):
     return render(request, 'auctions/bad_request.html', {})
 
+
+def banned_auctions(request):
+
+    form = SearchForm(request.GET)
+
+    if form.is_valid():
+        search_term = form.cleaned_data.get('search_term')
+        auction_list = Auction.objects.filter(title__icontains=search_term, state='Banned')
+
+        return render(request, 'auctions/index.html', {
+            'auction_list': auction_list,
+            'search_term': search_term,
+            'form': form
+        })
+
+    else:
+        form = SearchForm()
+        auction_list = Auction.objects.filter(state='Active')
+        return render(request, 'auctions/index.html', {'auction_list': auction_list, 'form': form})
