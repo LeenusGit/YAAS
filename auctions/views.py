@@ -9,10 +9,13 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views import View
 
+from auctions.resolver import ResolveThread
 from bids.models import Bid
 from .models import Auction
 from .forms import AuctionForm, SearchForm
 
+thread = ResolveThread()
+thread.start()
 
 class AuctionIndexView(View):
 
