@@ -44,13 +44,18 @@ class ResolveThread(threading.Thread):
 
                 if auction.deadline <= timezone.now():
 
-                    winner = User.objects.get(username=auction.leader)
-                    auction.state = 'Adjudicated'
-                    auction.save()
+                    if auction.leader != '':
 
-                    # Notify winner and bidders
-                    notify_winner(winner, auction)
-                    notify_bidders(winner, auction)
+                        winner = User.objects.get(username=auction.leader)
+                        auction.state = 'Adjudicated'
+                        auction.save()
+
+                        # Notify winner and bidders
+                        notify_winner(winner, auction)
+                        notify_bidders(winner, auction)
+                    else:
+                        # There were no bidders
+                        pass
 
 
 def notify_bidders(winner, auction):

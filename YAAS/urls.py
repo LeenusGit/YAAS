@@ -13,13 +13,24 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path
 
+from auctions import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('i18n/', include('django.conf.urls.i18n')),
+    # path('', include('core.urls')),
+    # # path('auctions/', include('auctions.urls')),
+    # path('auctions/<int:pk>/bid/', include('bids.urls')),
+    # path('polls/', include('polls.urls')),
+]
+
+urlpatterns += i18n_patterns(
     path('', include('core.urls')),
     path('auctions/', include('auctions.urls')),
     path('auctions/<int:pk>/bid/', include('bids.urls')),
     path('polls/', include('polls.urls')),
-]
+)

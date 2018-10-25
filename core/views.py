@@ -3,15 +3,45 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.utils import translation
 
 from .forms import UserRegistrationForm, UserUpdateForm
+from .models import UserLangauge
 
 
 def home(request):
+    user = request.user
+
+    print(request.session.items())
+
+    if request.method == 'POST':
+
+        lang_code = request.POST['language']
+
+        translation.activate(lang_code)
+        request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
+
+        if user.is_authenticated:
+            # user_language = UserLangauge.objects.create(user=user, language=lang_code)
+            # user_language.save()
+
+            try:
+                user_language = UserLangauge.objects.get(user=user)
+                user_language.language = lang_code
+            except UserLangauge.DoesNotExist:
+                user_language = UserLangauge.objects.create(user=user, language=lang_code)
+                user_language.save()
+
+        return HttpResponseRedirect('/')
+        # return HttpResponseRedirect(request.POST['next'])
+
     return render(request, 'base.html', {})
 
 
 def signup(request):
+
+    # if request.method == 'GET':
+    #     logout(request)
 
     if request.method == 'POST':
 
@@ -58,6 +88,18 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
+
+            # lang_code, created = UserLangauge.objects.get_or_create(user=user, defaults={'language': request.session.get['language']})
+
+            try:
+                print(UserLangauge.objects.get(user=user))
+                user_language = UserLangauge.objects.get(user=user)
+                lang_code = user_language.language
+            except UserLangauge.DoesNotExist:
+                lang_code = request.session.get['language']
+
+            request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
+
             return HttpResponseRedirect('/')
         else:
             error_message = 'Wrong username or password.'
