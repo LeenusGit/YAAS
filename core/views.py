@@ -22,8 +22,6 @@ def home(request):
         request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
 
         if user.is_authenticated:
-            # user_language = UserLangauge.objects.create(user=user, language=lang_code)
-            # user_language.save()
 
             try:
                 user_language = UserLangauge.objects.get(user=user)
@@ -89,16 +87,13 @@ def login_view(request):
         if user is not None:
             login(request, user)
 
-            # lang_code, created = UserLangauge.objects.get_or_create(user=user, defaults={'language': request.session.get['language']})
-
             try:
-                print(UserLangauge.objects.get(user=user))
                 user_language = UserLangauge.objects.get(user=user)
                 lang_code = user_language.language
+                request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
             except UserLangauge.DoesNotExist:
-                lang_code = request.session.get['language']
-
-            request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
+                # lang_code = request.session.get['language']
+                pass
 
             return HttpResponseRedirect('/')
         else:

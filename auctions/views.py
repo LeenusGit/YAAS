@@ -17,6 +17,7 @@ from .forms import AuctionForm, SearchForm
 thread = ResolveThread()
 thread.start()
 
+
 class AuctionIndexView(View):
 
     def get(self, request):
@@ -82,8 +83,8 @@ def edit_auction(request, pk):
 
     if request.method == 'POST':
         description = request.POST['description']
-        auction.description = description
-        auction.save()
+
+        Auction.new_description(auction.id, description)
 
         return HttpResponseRedirect(reverse('auctions:detail', args=(auction.id,)))
 
