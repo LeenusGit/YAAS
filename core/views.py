@@ -3,8 +3,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import translation
 
+from auctions import currencies
 from .forms import UserRegistrationForm, UserUpdateForm
 from .models import UserLangauge
 
@@ -13,6 +15,11 @@ def home(request):
     user = request.user
 
     print(request.session.items())
+    currency_list = currencies.get_currencies()
+    try:
+        current_currency = request.session['currency']
+    except KeyError:
+        current_currency = 'EUR'
 
     if request.method == 'POST':
 
@@ -33,7 +40,7 @@ def home(request):
         return HttpResponseRedirect('/')
         # return HttpResponseRedirect(request.POST['next'])
 
-    return render(request, 'base.html', {})
+    return render(request, 'base.html', {'currency_list': currency_list, 'current_currency': current_currency})
 
 
 def signup(request):
@@ -111,9 +118,7 @@ def logout_view(request):
 
 
 def profile(request):
-
     user = request.user
-
     if request.method == 'POST':
 
         for field in request.POST:
@@ -133,3 +138,14 @@ def profile(request):
 
     form = UserUpdateForm({'email': user.email})
     return render(request, 'core/profile.html', {'user': user, 'form': form})
+
+
+def currency(request):
+
+    if request.method == 'POST':
+
+        currency_code = request.POST['currency']
+
+        request.session['currency'] = currency_code
+
+    return HttpResponseRedirect(reverse('core:home'))

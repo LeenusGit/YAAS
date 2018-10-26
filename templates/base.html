@@ -6,43 +6,43 @@
     <title>
         {% block title %}YAAS{% endblock %}
     </title>
-<style>
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-    }
-    .nav {
-        overflow: hidden;
-        background-color: #333;
-    }
-    .nav ul{
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-    }
-    .nav li{
-        float: left;
-    }
-    .nav li.user{
-        float: right;
-        background-color: #4CAF50;
-        color: white;
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .nav {
+            overflow: hidden;
+            background-color: #333;
+        }
+        .nav ul{
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav li{
+            float: left;
+        }
+        .nav li.user{
+            float: right;
+            background-color: #4CAF50;
+            color: white;
 
-    }
-    .nav a{
-        display: block;
-        color: #f2f2f2;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        font-size: 17px;
-    }
-    .nav a:hover {
-        background-color: #ddd;
-        color: black;
-    }
+        }
+        .nav a{
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+        .nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
 
-</style>
+    </style>
 </head>
 <body>
 
@@ -69,26 +69,38 @@
         <form action="{% url 'core:home' %}" method="post">
             {% csrf_token %}
             <input name="next" type="hidden" value="{{ redirect_to }}">
-            <label>
-                <select name="language">
-                    {% get_current_language as LANGUAGE_CODE %}
-                    {% get_available_languages as LANGUAGES %}
-                    {% get_language_info_list for LANGUAGES as languages %}
+            <label for="lang">Select Language:</label>
+            <select id="lang" name="language">
+                {% get_current_language as LANGUAGE_CODE %}
+                {% get_available_languages as LANGUAGES %}
+                {% get_language_info_list for LANGUAGES as languages %}
 
-                    {% for language in languages %}
-                        <option value="{{ language.code }}"
-                                {% if language.code == LANGUAGE_CODE %}
-                                    selected
-                                {% endif %}>
-                            {{ language.name_local }} ({{ language.code }})
-                        </option>
-                    {% endfor %}
-
-                </select>
-            </label>
+                {% for language in languages %}
+                    <option value="{{ language.code }}"
+                            {% if language.code == LANGUAGE_CODE %}
+                            selected
+                            {% endif %}>
+                        {{ language.name_local }} ({{ language.code }})
+                    </option>
+                {% endfor %}
+            </select>
             <input type="submit" value="Go">
         </form>
-
+        <br>
+        <form action="{% url 'core:currency' %}" method="post">
+            {% csrf_token %}
+            <label for="currency">Select Currency:</label>
+            <select id="currency" name="currency">
+                {% for currency_code in currency_list %}
+                    <option value="{{ currency_code }}" {% if current_currency == currency_code %}
+                        selected
+                    {% endif %}>
+                        {{ currency_code }}
+                    </option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Go">
+        </form>
     {% endblock %}
 </div>
 </body>

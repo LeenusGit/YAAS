@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -9,13 +10,19 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views import View
 
+from auctions import currencies
 from auctions.resolver import ResolveThread
 from bids.models import Bid
 from .models import Auction
 from .forms import AuctionForm, SearchForm
 
-thread = ResolveThread()
-thread.start()
+from auctions.currencies import UpdateCurrenciesThread
+
+update_currency_thread = UpdateCurrenciesThread()
+update_currency_thread.start()
+
+resolve_thread = ResolveThread()
+resolve_thread.start()
 
 
 class AuctionIndexView(View):
@@ -100,6 +107,12 @@ class AuctionDetailView(View):
         auction = get_object_or_404(Auction, pk=pk)
         user = request.user
 
+        try:
+            currency_code = request.session['currency']
+        except KeyError:
+            currency_code = 'EUR'
+        converted_price = round(currencies.convert('EUR', float(auction.min_price), currency_code), 2)
+
         if user.is_superuser:
             is_user_admin = True
         else:
@@ -112,6 +125,7 @@ class AuctionDetailView(View):
 
         context = {
             'auction': auction,
+            'converted_price': converted_price,
             'is_permitted_to_edit': is_permitted_to_edit,
             'admin': is_user_admin,
         }
