@@ -1,5 +1,7 @@
 import threading
 import time
+from decimal import Decimal
+
 from pip._vendor import requests
 
 
@@ -32,18 +34,23 @@ class UpdateCurrenciesThread(threading.Thread):
             time.sleep(3600)
 
 
+def is_currency_valid(currency_code):
+
+    if currency_code in currency_list:
+        return True
+    else:
+        return False
+
+
 # Also works for USD since there is a key 'USDUSD'
 def get_dollar_value(currency_code):
 
-    if not lock:
+    try:
         for code in currency_dict:
             if currency_code in code[3:]:
                 return currency_dict[code]
-    else:
-        # currency_dict is updating
-        pass
-
-    return None
+    except:
+        print('Currency code does not exist')
 
 
 def convert(input_currency, input_amount, target_currency):
@@ -54,13 +61,10 @@ def convert(input_currency, input_amount, target_currency):
     target_dollar_rate = float(get_dollar_value(target_currency))
     value_in_target_currency = value_in_dollars * target_dollar_rate
 
-    # print(input_dollar_rate)
-    # print(value_in_dollars)
-    # print(target_currency)
-    # print(target_dollar_rate)
-    # print(value_in_target_currency)
+    value_decimal_type = round(Decimal(value_in_target_currency), 2)
+    print(value_decimal_type)
 
-    return value_in_target_currency
+    return value_decimal_type
 
 
 def get_currencies():

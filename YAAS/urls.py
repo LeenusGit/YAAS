@@ -22,10 +22,7 @@ from auctions import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
-    # path('', include('core.urls')),
-    # # path('auctions/', include('auctions.urls')),
-    # path('auctions/<int:pk>/bid/', include('bids.urls')),
-    # path('polls/', include('polls.urls')),
+    path('api/', include('api.urls')),
 ]
 
 urlpatterns += i18n_patterns(

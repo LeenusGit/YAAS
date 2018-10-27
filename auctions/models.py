@@ -1,3 +1,5 @@
+import base64
+
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.contrib.auth.models import User
@@ -22,6 +24,30 @@ class Auction(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_version(self):
+        version_string = str(self.description) + str(self.min_price)
+        version_bytes = bytes(version_string, 'utf-8')
+        version_encoded_string = base64.b64encode(version_bytes).decode('utf-8')
+        return version_encoded_string
+
+    def to_dict(self):
+
+        fields = {
+            'creator': self.author,
+            'title': self.title,
+            'description': self.description,
+            'min_price': str(self.min_price),
+            'deadline': str(self.deadline.isoformat()),
+        }
+
+        auction_dict = {
+            'model': 'Auction',
+            'pk': self.pk,
+            'version': self.get_version(),
+            'fields': fields,
+        }
+        return auction_dict
 
     @classmethod
     def bid(cls, id, amount, bidder):

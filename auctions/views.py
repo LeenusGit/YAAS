@@ -31,20 +31,16 @@ class AuctionIndexView(View):
 
         form = SearchForm(request.GET)
         user = request.user
-        if user.is_superuser:
-            is_user_admin = True
-        else:
-            is_user_admin = False
 
         if form.is_valid():
-            search_term = form.cleaned_data.get('search_term')
-            auction_list = Auction.objects.filter(title__icontains=search_term, state='Active')
+            search = form.cleaned_data.get('search')
+            auction_list = Auction.objects.filter(title__icontains=search, state='Active')
 
             return render(request, 'auctions/index.html', {
                 'auction_list': auction_list,
-                'search_term': search_term,
+                'search_term': search,
                 'form': form,
-                'is_user_admin': is_user_admin
+                'is_user_admin': user.is_superuser,
             })
 
         else:
@@ -111,7 +107,8 @@ class AuctionDetailView(View):
             currency_code = request.session['currency']
         except KeyError:
             currency_code = 'EUR'
-        converted_price = round(currencies.convert('EUR', float(auction.min_price), currency_code), 2)
+
+        converted_price = currencies.convert('EUR', float(auction.min_price), currency_code)
 
         if user.is_superuser:
             is_user_admin = True
@@ -128,6 +125,7 @@ class AuctionDetailView(View):
             'converted_price': converted_price,
             'is_permitted_to_edit': is_permitted_to_edit,
             'admin': is_user_admin,
+            'currency_code': currency_code,
         }
 
         return render(request, 'auctions/detail.html', context)

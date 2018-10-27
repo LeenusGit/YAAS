@@ -37,7 +37,7 @@ class AuctionForm(forms.Form):
 
 class SearchForm(forms.Form):
 
-    search_term = forms.CharField(
+    search = forms.CharField(
         required=False,
         label='Search Auctions',
         max_length=100,

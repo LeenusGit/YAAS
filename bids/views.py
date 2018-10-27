@@ -34,15 +34,18 @@ class BidView(View):
             'auction': auction,
             'form': form,
             'converted_price': converted_price,
+            'currency_code': currency_code,
         }
-
         return render(request, 'bids/new_bid.html', context)
 
     def post(self, request, pk):
 
         print(request.POST)
-
         bidder = request.user
+
+        if not bidder.is_authenticated:
+            return HttpResponse(status=401, reason='Wrong username or password')
+
         auction = get_object_or_404(Auction, pk=pk)
         min_price = auction.min_price
         currency_code = request.POST['currency']
@@ -67,7 +70,6 @@ class BidView(View):
             print('Euro bid amount: ', euro_bid_amount)
 
             if euro_bid_amount > min_price:
-
                 try:
                     auction = Auction.bid(auction.id, amount=euro_bid_amount, bidder=bidder)
                     bid = Bid.objects.create(auction_id=auction.id, amount=euro_bid_amount, bidder=bidder.username)
@@ -76,8 +78,8 @@ class BidView(View):
                     # Someone else has locked the auction
                     return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
 
+                # Bid was successful
                 return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
-
             else:
                 print(euro_bid_amount, ' was lover than ', min_price)
                 return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))

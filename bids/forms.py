@@ -16,7 +16,11 @@ class BidForm(forms.Form):
         min_bid_increment = round(currencies.convert('EUR', 0.01, currency_code), 2)
         if min_bid_increment == 0:
             min_bid_increment = 0.01
-        min_bid_value = round((float(min_price) + min_bid_increment), 2)
+        min_bid_value = min_price + min_bid_increment
+
+        # print('min_bid_value:', min_bid_value)
+        # print('min_price: ', min_price)
+        # print(min_bid_value == min_price)
 
         self.fields['bid'] = forms.DecimalField(
             initial=min_bid_value,

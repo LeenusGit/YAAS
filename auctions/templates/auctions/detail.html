@@ -17,8 +17,9 @@
     {% endblock %}
 
     <p>{{ auction.deadline }}</p>
-    <p>{{ converted_price }}</p>
+    <p>{{ converted_price }}{{ currency_code }}</p>
     <p><i>{{ auction.state }}</i></p>
+    <p><i>{{ auction.leader }}</i></p>
 
     {% block bid %}
 

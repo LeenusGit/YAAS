@@ -31,9 +31,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = 'emails/sent/'
 
-# Application definition
+# Application
 
 INSTALLED_APPS = [
+    'api.apps.ApiConfig',
     'bids.apps.BidsConfig',
     'core.apps.CoreConfig',
     'auctions.apps.AuctionsConfig',
