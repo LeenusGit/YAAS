@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'bids.apps.BidsConfig',
     'core.apps.CoreConfig',
     'auctions.apps.AuctionsConfig',
-    'polls.apps.PollsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

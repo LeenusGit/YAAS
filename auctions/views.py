@@ -18,9 +18,9 @@ from auctions.currencies import UpdateCurrenciesThread
 
 update_currency_thread = UpdateCurrenciesThread()
 update_currency_thread.start()
-#
-# resolve_thread = ResolveThread()
-# resolve_thread.start()
+
+resolve_thread = ResolveThread()
+resolve_thread.start()
 
 
 class AuctionIndexView(View):
