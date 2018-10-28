@@ -1,8 +1,13 @@
 import base64
+from datetime import timedelta, datetime
 
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.contrib.auth.models import User
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+
+from emails.send import send_new_bid_mail
 
 
 class Auction(models.Model):
@@ -53,7 +58,7 @@ class Auction(models.Model):
     def bid(cls, id, amount, bidder):
         with transaction.atomic():
 
-            # nowait ensure that if the resource is locked the
+            # nowait to ensure that if the resource is locked an error is raised
             auction = cls.objects.select_for_update(nowait=True).get(id=id)
             auction.min_price = amount
 
@@ -68,6 +73,14 @@ class Auction(models.Model):
 
             # Update the auction leader
             auction.leader = bidder.username
+
+            # Extend deadline if auction closes within 5 minutes
+            now = timezone.make_aware(datetime.now())
+            five_minutes_from_now = timezone.make_aware(datetime.now() + timedelta(minutes=5))
+            if auction.deadline <= five_minutes_from_now:
+                auction.deadline = now + timedelta(minutes=5)
+
+            # TODO: Test auction deadline extension
 
             auction.save()
 
@@ -84,16 +97,16 @@ class Auction(models.Model):
             return auction
 
 
-def send_new_bid_mail(user, auction, bid_amount):
-
-    email = user.email
-    title = auction.title
-
-    subject = 'New bid on auction: %s' % title
-    message = 'A new bid of {} has been registered on auction: {}'.format(bid_amount, title)
-    from_address = 'admin@yaas.com'
-    to_address_list = [email, ]
-
-    send_mail(subject, message, from_address, to_address_list)
+# def send_new_bid_mail(user, auction, bid_amount):
+#
+#     email = user.email
+#     title = auction.title
+#
+#     subject = 'New bid on auction: %s' % title
+#     message = 'A new bid of {} has been registered on auction: {}'.format(bid_amount, title)
+#     from_address = 'admin@yaas.com'
+#     to_address_list = [email, ]
+#
+#     send_mail(subject, message, from_address, to_address_list)
 
 

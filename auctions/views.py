@@ -13,6 +13,7 @@ from django.views import View
 from auctions import currencies
 from auctions.resolver import ResolveThread
 from bids.models import Bid
+from emails.send import send_confirm_email, send_ban_email
 from .models import Auction
 from .forms import AuctionForm, SearchForm
 
@@ -191,67 +192,67 @@ class ConfirmAuctionView(View):
         error = validate_auction(auction)
 
         if error is not None:
-            return HttpResponseBadRequest('bad_request')
+            return HttpResponseBadRequest(reverse('auctions:bad_request'))
         else:
             # POST was successful
             send_confirm_email(user, auction)
             auction.save()
-            return HttpResponseRedirect('success')
+            return HttpResponseRedirect(reverse('auctions:success'))
 
 
 def validate_auction(auction):
 
-    deadline = (parse_datetime(auction.deadline))
+    deadline = parse_datetime(auction.deadline)
     now = timezone.make_aware(datetime.now())
     three_days_from_now = timezone.make_aware(datetime.now() + timedelta(hours=72))
+
+    if deadline <= now:
+        # auction close date was in the past
+        error_message = 'Auction close time is in the past'
+        return error_message
 
     if deadline < three_days_from_now:
         # auction duration was too short
         error_message = 'Auction duration has to be longer than 72 hours.'
         return error_message
 
-    if deadline < now:
-        # auction close date was in the past
-        error_message = 'Auction close time is in the past'
-        return error_message
-
     return None
 
 
-def send_confirm_email(user, auction):
-    email = user.email
-    title = auction.title
+# def send_confirm_email(user, auction):
+#     email = user.email
+#     title = auction.title
+#
+#     subject = '%s confirmation' % title
+#     message = 'Hi %s,\n Your auction %s has been submitted to YAAS' % (user.username, title)
+#     from_address = 'admin@yaas.com'
+#     to_address_list = [email, ]
+#
+#     send_mail(subject, message, from_address, to_address_list)
 
-    subject = '%s confirmation' % title
-    message = 'Hi %s,\n Your auction %s has been submitted to YAAS' % (user.username, title)
-    from_address = 'admin@yaas.com'
-    to_address_list = [email, ]
 
-    send_mail(subject, message, from_address, to_address_list)
-
-
-def send_ban_email(user, auction):
-    # Should send emails to the creator and the bidders of the banned auction
-    email = user.email
-    title = auction.title
-    from_address = 'admin@yaas.com'
-
-    subject = '%s Ban' % title
-    message_to_creator = 'Hi {},\n Your auction {} has been been banned due to violation of ' \
-                         'terms of service'.format(user.username, title)
-    creator_email_list = [email, ]
-    send_mail(subject, message_to_creator, from_address, creator_email_list)
-
-    message_to_bidders = 'We regret to inform you that the auction {} has benn banned ' \
-                         'due to violation of terms of service'.format(title)
-    bidder_email_list = []
-    bid_list = Bid.objects.filter(auction_id=auction.id)
-    # Fill bid_list with emails of the bidders
-    for bid in bid_list:
-        bidder = User.objects.get(username=bid.bidder)
-        bidder_email_list.append(bidder.email)
-
-    send_mail(subject, message_to_bidders, from_address, bidder_email_list)
+# def send_ban_email(user, auction):
+#     # Should send emails to the creator and the bidders of the banned auction
+#     email = user.email
+#     title = auction.title
+#     from_address = 'admin@yaas.com'
+#
+#     subject = '%s Ban' % title
+#     message_to_creator = 'Hi {},\n Your auction {} has been been banned due to violation of ' \
+#                          'terms of service'.format(user.username, title)
+#     creator_email_list = [email, ]
+#     send_mail(subject, message_to_creator, from_address, creator_email_list)
+#
+#     message_to_bidders = 'We regret to inform you that the auction {} has benn banned ' \
+#                          'due to violation of terms of service'.format(title)
+#     bidder_email_list = []
+#     bid_list = Bid.objects.filter(auction_id=auction.id)
+#     # Fill bid_list with emails of the bidders
+#     for bid in bid_list:
+#         bidder = User.objects.get(username=bid.bidder)
+#         bidder_email_list.append(bidder.email)
+#
+#     send_mail(subject, message_to_bidders, from_address, bidder_email_list)
 
 
 def successful_auction_post(request):
@@ -265,14 +266,17 @@ def bad_request(request):
 def banned_auctions(request):
 
     form = SearchForm(request.GET)
+    auction_list = []
 
     if form.is_valid():
-        search_term = form.cleaned_data.get('search_term')
-        auction_list = Auction.objects.filter(title__icontains=search_term, state='Banned')
+        print('is valid')
+        search = form.cleaned_data.get('search')
+        auction_list = Auction.objects.filter(title__icontains=search, state='Active')
+        # auction_list = Auction.objects.filter(state='Banned')
 
         return render(request, 'auctions/index.html', {
             'auction_list': auction_list,
-            'search_term': search_term,
+            'search_term': search,
             'form': form
         })
 

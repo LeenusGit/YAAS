@@ -1,5 +1,3 @@
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -65,21 +63,24 @@ class BidView(View):
             bid_amount = data['bid']
             currency = data['currency']
 
-            print('Bid_amount = ', bid_amount)
+            # print('Bid_amount = ', bid_amount)
             euro_bid_amount = round(currencies.convert(currency, float(bid_amount), 'EUR'), 2)
-            print('Euro bid amount: ', euro_bid_amount)
+            # print('Euro bid amount: ', euro_bid_amount)
 
             if euro_bid_amount > min_price:
+
+                auction = Auction.bid(auction.id, amount=euro_bid_amount, bidder=bidder)
+                bid = Bid.objects.create(auction_id=auction.id, amount=euro_bid_amount, bidder=bidder.username)
+                bid.save()
+
                 try:
-                    auction = Auction.bid(auction.id, amount=euro_bid_amount, bidder=bidder)
-                    bid = Bid.objects.create(auction_id=auction.id, amount=euro_bid_amount, bidder=bidder.username)
-                    bid.save()
+                    print('successful bid')
+                    # Bid was successful
+                    return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
                 except:
                     # Someone else has locked the auction
+                    print('Auction is locked')
                     return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
-
-                # Bid was successful
-                return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
             else:
                 print(euro_bid_amount, ' was lover than ', min_price)
                 return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))

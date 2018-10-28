@@ -62,7 +62,6 @@ def convert(input_currency, input_amount, target_currency):
     value_in_target_currency = value_in_dollars * target_dollar_rate
 
     value_decimal_type = round(Decimal(value_in_target_currency), 2)
-    print(value_decimal_type)
 
     return value_decimal_type
 
