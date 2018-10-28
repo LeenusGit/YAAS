@@ -1,11 +1,14 @@
+import os
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import translation
 
+from YAAS.settings import BASE_DIR
 from auctions import currencies
 from .forms import UserRegistrationForm, UserUpdateForm
 from .models import UserLangauge
@@ -149,3 +152,27 @@ def currency(request):
         request.session['currency'] = currency_code
 
     return HttpResponseRedirect(reverse('core:home'))
+
+
+def emails(request):
+
+    user = request.user
+
+    if not user.is_superuser:
+        return HttpResponseRedirect(reverse('core:login'))
+
+    path = (BASE_DIR + '/emails/sent/')
+    email_list = []
+
+    for file in os.listdir(path):
+        print(file)
+        file_path = os.path.join(path, file)
+        f = open(file_path, 'r')
+        email_list.append(f.read())
+        f.close()
+
+    for email in email_list:
+        print(email)
+        print('')
+
+    return render(request, 'core/emails.html', {'email_list': email_list})

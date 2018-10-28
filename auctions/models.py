@@ -1,13 +1,11 @@
 import base64
 from datetime import timedelta, datetime
 
-from django.core.mail import send_mail
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 
-from emails.send import send_new_bid_mail
+from core.emails import send_new_bid_mail
 
 
 class Auction(models.Model):
@@ -95,18 +93,3 @@ class Auction(models.Model):
             auction.save()
 
             return auction
-
-
-# def send_new_bid_mail(user, auction, bid_amount):
-#
-#     email = user.email
-#     title = auction.title
-#
-#     subject = 'New bid on auction: %s' % title
-#     message = 'A new bid of {} has been registered on auction: {}'.format(bid_amount, title)
-#     from_address = 'admin@yaas.com'
-#     to_address_list = [email, ]
-#
-#     send_mail(subject, message, from_address, to_address_list)
-
-
