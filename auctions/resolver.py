@@ -1,14 +1,10 @@
 import threading
 import time
-from datetime import datetime, timedelta
-
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
 from django.utils import timezone
 
 from core.emails import notify_winner, notify_bidders
 from .models import Auction
-from bids.models import Bid
 
 
 class ResolveThread(threading.Thread):

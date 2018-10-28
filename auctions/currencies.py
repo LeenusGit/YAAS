@@ -1,9 +1,7 @@
 import threading
 import time
 from decimal import Decimal
-
-from pip._vendor import requests
-
+import requests
 
 url = 'http://www.apilayer.net/api/live?access_key=8b972a65ee9a3bd9aa92b29887149f17&format=1'
 currency_list = []

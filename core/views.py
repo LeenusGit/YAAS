@@ -3,24 +3,22 @@ import os
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import translation
 
-from YAAS.settings import BASE_DIR, LOCALE_PATHS
+from YAAS.settings import BASE_DIR
 from auctions import currencies
 from .forms import UserRegistrationForm, UserUpdateForm
 from .models import UserLangauge
 
 
 def home(request):
+
     user = request.user
-
-    print(request.session.items())
-    print(LOCALE_PATHS)
-
     currency_list = currencies.get_currencies()
+
     try:
         current_currency = request.session['currency']
     except KeyError:
@@ -49,9 +47,6 @@ def home(request):
 
 
 def signup(request):
-
-    # if request.method == 'GET':
-    #     logout(request)
 
     if request.method == 'POST':
 
@@ -167,14 +162,9 @@ def emails(request):
     email_list = []
 
     for file in os.listdir(path):
-        print(file)
         file_path = os.path.join(path, file)
         f = open(file_path, 'r')
         email_list.append(f.read())
         f.close()
-
-    for email in email_list:
-        print(email)
-        print('')
 
     return render(request, 'core/emails.html', {'email_list': email_list})
