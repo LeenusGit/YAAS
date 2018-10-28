@@ -49,14 +49,14 @@
 <div id="nav" class="nav">
     {% block nav %}
         <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="{% url 'auctions:index' %}">Auctions</a></li>
-            <li><a href="{% url 'core:register' %}">New User</a></li>
+            <li><a href="/">{% trans 'Home' %}</a></li>
+            <li><a href="{% url 'auctions:index' %}">{% trans 'Auctions' %}</a></li>
+            <li><a href="{% url 'core:register' %}">{% trans 'New User' %}</a></li>
             {% if user.is_authenticated %}
-                <li style="float: right"><a href="{% url 'core:logout' %}">Logout</a></li>
+                <li style="float: right"><a href="{% url 'core:logout' %}">{% trans 'Logout' %}</a></li>
                 <li class="user"><a href="{% url 'core:profile' %}">{{ user }}</a></li>
             {% else %}
-                <li style="float: right"><a href="{% url 'core:login' %}">Login</a></li>
+                <li style="float: right"><a href="{% url 'core:login' %}">{% trans 'Login' %}</a></li>
             {% endif %}
         </ul>
     {% endblock %}
@@ -65,6 +65,7 @@
 <div id="content" style="padding-left: 16px">
     {% block content %}
         <h2>{% trans 'Yet Another Auction Site' %}</h2>
+        <h3>{% trans 'Welcome' %}</h3>
 
         <form action="{% url 'core:home' %}" method="post">
             {% csrf_token %}

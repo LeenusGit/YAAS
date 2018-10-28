@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import translation
 
-from YAAS.settings import BASE_DIR
+from YAAS.settings import BASE_DIR, LOCALE_PATHS
 from auctions import currencies
 from .forms import UserRegistrationForm, UserUpdateForm
 from .models import UserLangauge
@@ -18,6 +18,8 @@ def home(request):
     user = request.user
 
     print(request.session.items())
+    print(LOCALE_PATHS)
+
     currency_list = currencies.get_currencies()
     try:
         current_currency = request.session['currency']
