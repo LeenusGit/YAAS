@@ -72,13 +72,11 @@ class Auction(models.Model):
             # Update the auction leader
             auction.leader = bidder.username
 
-            # Extend deadline if auction closes within 5 minutes
-            now = timezone.make_aware(datetime.now())
-            five_minutes_from_now = timezone.make_aware(datetime.now() + timedelta(minutes=5))
-            if auction.deadline <= five_minutes_from_now:
-                auction.deadline = now + timedelta(minutes=5)
-
-            # TODO: Test auction deadline extension
+            # # Extend deadline if auction closes within 5 minutes
+            # now = timezone.make_aware(datetime.now())
+            # five_minutes_from_now = timezone.make_aware(datetime.now() + timedelta(minutes=5))
+            # if auction.deadline <= five_minutes_from_now:
+            #     auction.deadline = now + timedelta(minutes=5)
 
             auction.save()
 

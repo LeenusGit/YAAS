@@ -15,85 +15,99 @@ def create_defined_auction():
     author = 'Linus'
     title = 'Ford Focus'
     description = 'A car of brand Ford and model Focus'
-    duration_days = 1
-    deadline = timezone.now() + timedelta(days=duration_days)
+    deadline = timezone.now() + timedelta(days=3)
     min_price = 10.50
 
-    return Auction.objects.create(author=author, title=title, description=description,
-                                  deadline=deadline, min_price=min_price)
+    auction = Auction.objects.create(
+        author=author,
+        title=title,
+        description=description,
+        deadline=deadline,
+        min_price=min_price
+    )
+    return auction
 
 
-def create_defined_user():
+def valid_form_data():
 
-    username = 'JLennon'
-    firstname = 'John'
-    lastName = 'Lennon'
-    email = 'lennon@thebeatles.com'
-    password = 'johnpassword'
+    date = datetime.now() + timedelta(days=3)
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    user.first_name = firstname
-    user.last_name = lastName
-    return user
+    data = {
+        'title': 'Ford Fiesta',
+        'description': 'A car of brand Ford and model Fiesta',
+        'min_price': 20.5,
+        'close_date': date.date(),
+        'close_time': '12:34',
+    }
+    return data
 
 
 class AuctionIndexViewTests(TestCase):
 
-    def testNoAuctions(self):
+    def test_no_auctions(self):
         response = self.client.get(reverse('auctions:index'))
         self.assertEqual(response.status_code, 200)
         self.assertQuerysetEqual(response.context['auction_list'], [])
 
-    def testOneAuction(self):
+    def test_one_auction(self):
         auction = create_defined_auction()
         context = '<Auction: %s>' % auction.title
         response = self.client.get(reverse('auctions:index'))
         self.assertQuerysetEqual(response.context['auction_list'], [context])
 
 
-class CreateAuctionFormTests(TestCase):
+class CreateAuctionTests(TestCase):
 
-    def testCreateValidFormattedAuction(self):
-        form_data = {
-            'title': 'Ford Focus',
-            'description': 'A car of brand Ford and model Focus',
-            'min_price': 12.3,
-            'close_date': '12.03.4567',
-            'close_time': '12:34',
-        }
-        form = AuctionForm(data=form_data)
+    def test_create_valid_formatted_auction(self):
+        data = valid_form_data()
+        data['close_date'] = '23.11.2018'
+        form = AuctionForm(data=data)
         self.assertEqual(form.is_valid(), True)
 
-    def testCreatePastAuction(self):
-        c = Client()
-        past_time = timezone.make_aware(datetime.now() - timedelta(days=1))
-        data = {
-            'title': 'Ford Fiesta',
-            'description': 'A car of brand Ford and model Fiesta',
-            'min_price': 12.3,
-            'deadline': past_time,
-                    }
-        response = c.post(reverse('auctions:confirm'), data)
+    def test_new_auction_no_user(self):
+
+        data = valid_form_data()
+        response = self.client.get(reverse('auctions:create'), data)
+        self.assertRedirects(response, reverse('core:login'))
+
+    def test_confirm_valid_auction(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.client.login(username='testuser', password='12345')
+
+        date = timezone.now() + timedelta(days=3, minutes=1)
+        data = valid_form_data()
+        data['deadline'] = date
+        response = self.client.post(reverse('auctions:confirm'), data)
+
+        self.assertRedirects(response, reverse('auctions:success'))
+
+    def test_confirm_past_auction(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.client.login(username='testuser', password='12345')
+
+        past_date = timezone.now() - timedelta(minutes=1)
+        data = valid_form_data()
+        data['deadline'] = past_date
+        response = self.client.post(reverse('auctions:confirm'), data)
+        print(response.reason_phrase)
         self.assertEqual(response.status_code, 400)
+        self.assertEqual('past' in response.reason_phrase, True)
+
+    def test_confirm_too_short_auction(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.client.login(username='testuser', password='12345')
+
+        past_date = timezone.now() + timedelta(days=2, minutes=1)
+        data = valid_form_data()
+        data['deadline'] = past_date
+        response = self.client.post(reverse('auctions:confirm'), data)
+        print(response.reason_phrase)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual('duration' in response.reason_phrase, True)
 
 
 class AuctionModelTests(TestCase):
 
-    def testNewAuctionState(self):
+    def test_new_auction_state(self):
         auction = create_defined_auction()
         self.assertEqual(auction.state, 'Active')
-
-
-class UserModelTests(TestCase):
-
-    def testNewUserName(self):
-        user = create_defined_user()
-        self.assertEqual(user.first_name, 'John')
-        self.assertEqual(user.last_name, 'Lennon')
-
-    def testAuthenticateUser(self):
-        user = create_defined_user()
-        username = 'JLennon'
-        password = 'johnpassword'
-        user2 = authenticate(username=username, password=password)
-        self.assertEquals(user, user2)

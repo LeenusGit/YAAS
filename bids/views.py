@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta
+
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 
 from auctions import currencies
@@ -69,14 +72,21 @@ class BidView(View):
 
             if euro_bid_amount > min_price:
 
-                auction = Auction.bid(auction.id, amount=euro_bid_amount, bidder=bidder)
-                bid = Bid.objects.create(auction_id=auction.id, amount=euro_bid_amount, bidder=bidder.username)
-                bid.save()
-
                 try:
+                    auction = Auction.bid(auction.id, amount=euro_bid_amount, bidder=bidder)
+                    bid = Bid.objects.create(auction_id=auction.id, amount=euro_bid_amount, bidder=bidder.username)
+                    bid.save()
+
+                    # Extend deadline if auction closes within 5 minutes
+                    now = timezone.make_aware(datetime.now())
+                    five_minutes_from_now = timezone.make_aware(datetime.now() + timedelta(minutes=5))
+                    if auction.deadline <= five_minutes_from_now:
+                        auction.deadline = now + timedelta(minutes=5)
+
+                    auction.save()
                     print('successful bid')
                     # Bid was successful
-                    return HttpResponseRedirect(reverse('auctions:detail', args=(pk,)))
+                    return HttpResponseRedirect(reverse('bids:success', args=(pk,)))
                 except:
                     # Someone else has locked the auction
                     print('Auction is locked')
@@ -87,4 +97,9 @@ class BidView(View):
 
         else:
             # The form is not valid
+            print('Form is not valid')
             return render(request, 'bids/new_bid.html', {'auction': auction, 'form': form})
+
+
+def success(request, pk):
+    return render(request, 'bids/successful_bid.html', {})

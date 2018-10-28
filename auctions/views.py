@@ -18,9 +18,9 @@ from auctions.currencies import UpdateCurrenciesThread
 
 update_currency_thread = UpdateCurrenciesThread()
 update_currency_thread.start()
-
-resolve_thread = ResolveThread()
-resolve_thread.start()
+#
+# resolve_thread = ResolveThread()
+# resolve_thread.start()
 
 
 class AuctionIndexView(View):
@@ -51,7 +51,7 @@ def new_auction(request):
 
     user = request.user
     if not user.is_authenticated:
-        return HttpResponseRedirect('/login/')
+        return HttpResponseRedirect(reverse('core:login'))
     form = AuctionForm()
     return render(request, 'auctions/create.html', {'form': form})
 
@@ -134,12 +134,10 @@ class ConfirmAuctionView(View):
 
         user = request.user
         if not user.is_authenticated:
-            return HttpResponseRedirect('/login/')
+            return HttpResponseRedirect(reverse('core:login'))
 
         form = AuctionForm(request.GET)
         if form.is_valid():
-
-            # TODO: Rewrite with validate_auction()
 
             title = (form.cleaned_data.get('title'))
             description = (form.cleaned_data.get('description'))
@@ -148,12 +146,6 @@ class ConfirmAuctionView(View):
             close_time = (form.cleaned_data.get('close_time'))
 
             deadline = datetime.combine(close_date, close_time)
-
-            if deadline < datetime.now() + timedelta(hours=72):
-                # POSTED auction duration was too short
-                error_message = 'Auction duration has to be longer than 72 hours.'
-                return render(request, 'auctions/create_error.html', {'form': form, 'error': error_message})
-
             aware_deadline = timezone.make_aware(deadline)
 
             auction = Auction(
@@ -163,6 +155,15 @@ class ConfirmAuctionView(View):
                 min_price=min_price,
                 deadline=aware_deadline,
             )
+
+            error_message = validate_auction(auction)
+            if error_message is not None:
+                print(error_message)
+                return render(request, 'auctions/create_error.html', {'form': form, 'error': error_message})
+
+            # if deadline < datetime.now() + timedelta(hours=72):
+            #     # POSTED auction duration was too short
+            #     error_message = 'Auction duration has to be longer than 72 hours.'
 
             return render(request, 'auctions/confirm.html', {'auction': auction, 'form': form})
 
@@ -174,21 +175,18 @@ class ConfirmAuctionView(View):
         if not user.is_authenticated:
             return HttpResponseRedirect('/login/')
 
-        # TODO: Rewrite the auction data to a form
-
         data = request.POST
+        deadline = parse_datetime((data['deadline']))
         auction = Auction(
             author=user,
             title=data['title'],
             description=data['description'],
             min_price=data['min_price'],
-            deadline=data['deadline'],
+            deadline=deadline,
         )
-
         error = validate_auction(auction)
-
         if error is not None:
-            return HttpResponseBadRequest(reverse('auctions:bad_request'))
+            return HttpResponseBadRequest(reverse('auctions:bad_request'), reason=error)
         else:
             # POST was successful
             send_confirm_email(user, auction)
@@ -198,7 +196,7 @@ class ConfirmAuctionView(View):
 
 def validate_auction(auction):
 
-    deadline = parse_datetime(auction.deadline)
+    deadline = auction.deadline
     now = timezone.make_aware(datetime.now())
     three_days_from_now = timezone.make_aware(datetime.now() + timedelta(hours=72))
 

@@ -6,4 +6,5 @@ app_name = 'bids'
 
 urlpatterns = [
     path('', views.BidView.as_view(), name='bid'),
+    path('success/', views.success, name='success'),
 ]

@@ -23,13 +23,13 @@ class AuctionForm(forms.Form):
         initial=20)
 
     close_date = forms.DateField(
-        label='Auction close date (dd.mm.yyyy)',
+        label='Auction close date (dd.mm.yyyy, eg.(23.11.2018)',
         input_formats=('%d.%m.%Y',),
         widget=forms.DateInput(format='%d.%m.%Y'),
         initial=datetime.date.today() + datetime.timedelta(days=4),
     )
     close_time = forms.TimeField(
-        label='Auction close time (hh:mm)',
+        label='Auction close time (hh:mm, eg.(21.09)',
         widget=forms.TimeInput(format='%H:%M'),
         initial=datetime.datetime.today(),
     )
